@@ -49,7 +49,18 @@ export interface FoodParticle {
   foodType: FoodType;
 }
 
-export type GameScreen = "menu" | "play" | "win";
+export type LevelId = "doubles" | "make10" | "placeValues";
+
+export interface LevelDefinition {
+  id: LevelId;
+  name: string;
+  example: string;
+  foodType: FoodType;
+  generateProblems: () => MathProblem[];
+  generateWrongAnswers: (correctAnswer: number, problem: MathProblem) => [number, number];
+}
+
+export type GameScreen = "menu" | "levelSelect" | "play" | "win";
 
 export interface Assets {
   kitten: HTMLImageElement;

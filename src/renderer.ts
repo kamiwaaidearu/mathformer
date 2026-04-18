@@ -1,4 +1,4 @@
-import type { Assets, Kitten, Platform, FoodParticle, MathProblem, FoodType } from "./types";
+import type { Assets, Kitten, Platform, FoodParticle, MathProblem, FoodType, LevelDefinition } from "./types";
 import { getFoodSprite } from "./assets";
 import {
   CANVAS_WIDTH,
@@ -89,7 +89,83 @@ export function renderMenuScreen(
   ctx.globalAlpha = 1;
 
   // Controls hint
-  drawText(ctx, "Arrow Keys to move  |  SPACE to jump", CANVAS_WIDTH / 2, 500, FONT_CONTROLS, "#CCCCCC", "center", false);
+  drawText(ctx, "Arrow Keys to move  |  SPACE to jump", CANVAS_WIDTH / 2, 500, FONT_CONTROLS, "#3A2A1A", "center", false);
+}
+
+export function renderLevelSelectScreen(
+  ctx: CanvasRenderingContext2D,
+  assets: Assets,
+  levels: LevelDefinition[],
+  selectedIndex: number,
+  time: number,
+): void {
+  drawBackground(ctx);
+
+  const bounce = Math.sin(time * 3) * 5;
+  drawText(ctx, "Pick Your Challenge!", CANVAS_WIDTH / 2, 60 + bounce, FONT_TITLE, "#FF6B35");
+
+  const cardWidth = 500;
+  const cardHeight = 100;
+  const cardGap = 20;
+  const startY = 160;
+  const cardX = (CANVAS_WIDTH - cardWidth) / 2;
+
+  for (let i = 0; i < levels.length; i++) {
+    const y = startY + i * (cardHeight + cardGap);
+    const isSelected = i === selectedIndex;
+
+    ctx.fillStyle = isSelected ? "rgba(255, 200, 50, 0.3)" : "rgba(255, 255, 255, 0.12)";
+    ctx.strokeStyle = isSelected ? "#FFDD44" : "rgba(255, 255, 255, 0.3)";
+    ctx.lineWidth = isSelected ? 4 : 2;
+    ctx.beginPath();
+    ctx.roundRect(cardX, y, cardWidth, cardHeight, 12);
+    ctx.fill();
+    ctx.stroke();
+
+    const foodSprite = getFoodSprite(assets, levels[i].foodType);
+    ctx.drawImage(foodSprite, cardX + 16, y + (cardHeight - 48) / 2, 48, 48);
+
+    const textX = cardX + 80;
+    drawText(
+      ctx,
+      levels[i].name,
+      textX,
+      y + 16,
+      FONT_SUBTITLE,
+      isSelected ? "#FFDD44" : "#FFFFFF",
+      "left",
+      true,
+    );
+    drawText(
+      ctx,
+      levels[i].example,
+      textX,
+      y + 58,
+      FONT_CONTROLS,
+      "#3A2A1A",
+      "left",
+      false,
+    );
+
+    if (isSelected) {
+      const kittenBounce = Math.sin(time * 4) * 3;
+      ctx.drawImage(assets.kitten, cardX - 64, y + (cardHeight - 48) / 2 + kittenBounce, 48, 48);
+    }
+  }
+
+  const alpha = 0.5 + Math.sin(time * 4) * 0.5;
+  ctx.globalAlpha = alpha;
+  drawText(
+    ctx,
+    "UP/DOWN to choose  |  SPACE to play",
+    CANVAS_WIDTH / 2,
+    520,
+    FONT_CONTROLS,
+    "#3A2A1A",
+    "center",
+    false,
+  );
+  ctx.globalAlpha = 1;
 }
 
 export function renderPlayScreen(
@@ -268,7 +344,7 @@ export function renderWinScreen(
       CANVAS_WIDTH / 2,
       520,
       FONT_CONTROLS,
-      "#CCCCCC",
+      "#3A2A1A",
       "center",
       false,
     );

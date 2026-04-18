@@ -4,6 +4,8 @@ export class InputManager {
   private keysDown = new Set<string>();
   private jumpPressedThisFrame = false;
   private jumpBufferTimer = 0;
+  private upPressedThisFrame = false;
+  private downPressedThisFrame = false;
 
   constructor() {
     document.addEventListener("keydown", (e) => this.onKeyDown(e));
@@ -11,7 +13,7 @@ export class InputManager {
   }
 
   private onKeyDown(e: KeyboardEvent): void {
-    if (e.code === "Space" || e.code === "ArrowLeft" || e.code === "ArrowRight" || e.code === "ArrowUp") {
+    if (e.code === "Space" || e.code === "ArrowLeft" || e.code === "ArrowRight" || e.code === "ArrowUp" || e.code === "ArrowDown") {
       e.preventDefault();
     }
     this.keysDown.add(e.code);
@@ -19,6 +21,8 @@ export class InputManager {
       this.jumpPressedThisFrame = true;
       this.jumpBufferTimer = JUMP_BUFFER_TIME;
     }
+    if (e.code === "ArrowUp") this.upPressedThisFrame = true;
+    if (e.code === "ArrowDown") this.downPressedThisFrame = true;
   }
 
   private onKeyUp(e: KeyboardEvent): void {
@@ -33,6 +37,8 @@ export class InputManager {
 
   resetJumpPress(): void {
     this.jumpPressedThisFrame = false;
+    this.upPressedThisFrame = false;
+    this.downPressedThisFrame = false;
   }
 
   consumeJump(): boolean {
@@ -58,5 +64,13 @@ export class InputManager {
 
   get spacePressed(): boolean {
     return this.jumpPressedThisFrame;
+  }
+
+  get upPressed(): boolean {
+    return this.upPressedThisFrame;
+  }
+
+  get downPressed(): boolean {
+    return this.downPressedThisFrame;
   }
 }

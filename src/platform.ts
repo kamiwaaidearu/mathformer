@@ -8,7 +8,6 @@ import {
   GROUND_WIDTH,
   GROUND_HEIGHT,
 } from "./constants";
-import { generateWrongAnswers } from "./math";
 
 const FOOD_TYPES: FoodType[] = ["fish", "chicken", "cupcake"];
 
@@ -30,8 +29,11 @@ export function createGroundPlatform(): Platform {
   };
 }
 
-export function createAnswerPlatforms(problem: MathProblem): Platform[] {
-  const [wrong1, wrong2] = generateWrongAnswers(problem.correctAnswer);
+export function createAnswerPlatforms(
+  problem: MathProblem,
+  wrongAnswerGen: (correctAnswer: number, problem: MathProblem) => [number, number],
+): Platform[] {
+  const [wrong1, wrong2] = wrongAnswerGen(problem.correctAnswer, problem);
   const answers = shuffleArray([
     { value: problem.correctAnswer, isCorrect: true },
     { value: wrong1, isCorrect: false },

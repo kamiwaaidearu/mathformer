@@ -1,12 +1,12 @@
-import type { Assets, GameScreen, Kitten, Platform, MathProblem, FoodParticle, FoodType } from "./types";
+import type { Assets, GameScreen, Kitten, Platform, MathProblem, FoodParticle, FoodType, LevelDefinition } from "./types";
 import { InputManager } from "./input";
 import { GameAudio } from "./audio";
-import { ProblemQueue } from "./math";
+import { ProblemQueue, LEVELS } from "./math";
 import { createKitten, respawnKitten, clampKittenToCanvas } from "./player";
 import { updateKittenPhysics } from "./physics";
 import { resolvePlatformCollisions } from "./collision";
 import { createGroundPlatform, createAnswerPlatforms } from "./platform";
-import { renderMenuScreen, renderPlayScreen, renderWinScreen } from "./renderer";
+import { renderMenuScreen, renderLevelSelectScreen, renderPlayScreen, renderWinScreen } from "./renderer";
 import {
   FIXED_TIMESTEP,
   MAX_DELTA,
@@ -28,6 +28,8 @@ export class Game {
   private audio: GameAudio;
 
   private screen: GameScreen = "menu";
+  private selectedLevelIndex = 0;
+  private currentLevel: LevelDefinition = LEVELS[0];
   private kitten: Kitten;
   private groundPlatform: Platform;
   private answerPlatforms: Platform[] = [];
@@ -56,7 +58,7 @@ export class Game {
     this.audio = new GameAudio();
     this.kitten = createKitten();
     this.groundPlatform = createGroundPlatform();
-    this.problemQueue = new ProblemQueue();
+    this.problemQueue = new ProblemQueue(this.currentLevel.generateProblems);
   }
 
   start(): void {
@@ -89,6 +91,9 @@ export class Game {
       case "menu":
         this.updateMenu();
         break;
+      case "levelSelect":
+        this.updateLevelSelect();
+        break;
       case "play":
         this.updatePlay(dt);
         break;
@@ -103,6 +108,19 @@ export class Game {
   private updateMenu(): void {
     if (this.input.spacePressed) {
       this.audio.init();
+      this.screen = "levelSelect";
+    }
+  }
+
+  private updateLevelSelect(): void {
+    if (this.input.upPressed) {
+      this.selectedLevelIndex = (this.selectedLevelIndex - 1 + LEVELS.length) % LEVELS.length;
+    }
+    if (this.input.downPressed) {
+      this.selectedLevelIndex = (this.selectedLevelIndex + 1) % LEVELS.length;
+    }
+    if (this.input.spacePressed) {
+      this.currentLevel = LEVELS[this.selectedLevelIndex];
       this.startGame();
     }
   }
@@ -110,7 +128,7 @@ export class Game {
   private startGame(): void {
     this.screen = "play";
     this.kitten = createKitten();
-    this.problemQueue.reset();
+    this.problemQueue = new ProblemQueue(this.currentLevel.generateProblems);
     this.feedbackTimer = 0;
     this.feedbackType = null;
     this.feedbackPlatformIndex = null;
@@ -122,7 +140,7 @@ export class Game {
     const problem = this.problemQueue.getNext();
     if (problem) {
       this.currentProblem = problem;
-      this.answerPlatforms = createAnswerPlatforms(problem);
+      this.answerPlatforms = createAnswerPlatforms(problem, this.currentLevel.generateWrongAnswers);
     }
   }
 
@@ -228,7 +246,7 @@ export class Game {
     this.foodRain = this.foodRain.filter((f) => f.y < CANVAS_HEIGHT + 50);
 
     if (this.winTimer >= WIN_DURATION) {
-      this.screen = "menu";
+      this.screen = "levelSelect";
     }
   }
 
@@ -238,6 +256,9 @@ export class Game {
     switch (this.screen) {
       case "menu":
         renderMenuScreen(this.ctx, this.assets, this.gameTime);
+        break;
+      case "levelSelect":
+        renderLevelSelectScreen(this.ctx, this.assets, LEVELS, this.selectedLevelIndex, this.gameTime);
         break;
       case "play":
         renderPlayScreen(
